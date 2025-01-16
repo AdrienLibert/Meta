@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Audio Interface</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>ChatGPT Audio Interface</h1>
+        <div class="input-section">
+            <input type="text" id="user-input" placeholder="Write your message here...">
+            <button id="send-button">Send</button>
+        </div>
+        <div class="response-section">
+            <p id="response-text"></p>
+            <audio id="response-audio" controls></audio>
+        </div>
+    </div>
+    <script>
+        document.getElementById('send-button').addEventListener('click', async () => {
+            const userInput = document.getElementById('user-input').value;
+            const responseText = document.getElementById('response-text');
+            const responseAudio = document.getElementById('response-audio');
+    
+            responseText.textContent = "Loading...";
+            responseAudio.src = "";
+    
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: userInput })
+                });
+    
+                if (!response.ok) {
+                    throw new Error("Error request.");
+                }
+                const data = await response.json();
+                responseText.textContent = data.response;
+    
+                // Add a unique query parameter to the audio URL to prevent caching
+                const uniqueUrl = `/${data.audio_file}?t=${new Date().getTime()}`;
+                responseAudio.src = uniqueUrl;
+                responseAudio.load(); // Force reload of the new audio
+            } catch (error) {
+                responseText.textContent = "Error: " + error.message;
+            }
+        });
+    </script>    
+</body>
+</html>
