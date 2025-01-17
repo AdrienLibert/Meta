@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from openai import OpenAI
 import pyttsx3
+from flask_cors import CORS
 
 # Configuration OpenAI
 OPENAI_API_KEY = "gHIs4XUay9uu2m94662993E19c7c46E4A9A5B644934cE9B4"
@@ -9,6 +10,7 @@ OPENAI_BASE_URL = "http://chat.api.xuanyuan.com.cn/v1"
 client_ai = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
 
 app = Flask(__name__)
+CORS(app)
 
 # Initialize conversation history with a specific role
 conversation_history = [
@@ -48,7 +50,7 @@ def generate_local_audio(text):
     else:
         print("No English voice found. Using default voice.")
 
-    engine.save_to_file(text, 'static/output.mp3')
+    engine.save_to_file(text, 'static/output.wav')
     engine.runAndWait()
 
 @app.route('/')
@@ -65,7 +67,9 @@ def chat():
     response = get_chatgpt_response(user_message)
     generate_local_audio(response)
 
-    return jsonify({"response": response, "audio_file": "static/output.mp3"})
+     # Construire une URL absolue pour le fichier audio
+    audio_url = request.host_url + "static/output.wav"
+    return jsonify({"response": response, "audio_file": audio_url})
 
 if __name__ == '__main__':
     app.run(port=5000)
